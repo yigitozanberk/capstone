@@ -1,0 +1,120 @@
+---
+title: "ISLR Lab chp 6"
+author: "Yigit Ozan Berk"
+date: "10/25/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Chapter 6 Lab
+
+## Best Subset Selection
+
+```{r}
+library(ISLR)
+names(Hitters)
+```
+
+```{r}
+dim(Hitters)
+sum(is.na(Hitters$Salary))
+```
+
+```{r}
+dat = na.omit(Hitters)
+dim(dat)
+```
+
+```{r}
+sum(is.na(dat))
+```
+
+The regsubsets() function (part of the `r leaps` library) performs best subset selection by identifying the best model that contains a given number of predictors, where best is quantified using RSS. The syntax is the same as for lm(). The summary() command outputs the best set of variables for each model size.
+```{r}
+install.packages("leaps")
+library(leaps)
+regfit.full = regsubsets(Salary~., dat)
+summary(regfit.full)
+```
+
+an asterix indicates that a given variable is included in the corresponding model. For instance, this output indicates that the best two-variable model contans only Hits and CRBI. By default, regsubsets() only reports results up to the best eight-variable model. But the nvmax option can be used in order to return as many variables as are desired. Here we fit up to a 19-variable model.
+
+```{r}
+regfit.full = regsubsets(Salary ~., data = dat, nvmax = 19)
+reg.summary = summary(regfit.full)
+names(reg.summary)
+```
+
+the summary function also returns R^2 , RSS, adjusted R^2 C_p, and BIC. We can examine these to try to select the best overall model.
+
+```{r}
+reg.summary$rsq
+```
+
+we see that the R^2 statistic increases from 32%, when only one variable is included in the model, to almost 55%, when all variables are included. As expected, the R^2 statistic increases monotonically as more variables are included.
+
+Plotting RSS, adjusted R^2, C_p and BIC for all of the models at once will help us decide which model to select. 
+type = "l tells R to connect plotted points with lines
+
+```{r}
+par(mfrow = c(2,2))
+plot(reg.summary$rss, xlab = "Number of variables", ylab = "RSS", type = "l")
+plot(reg.summary$adjr2, xlab = "No of variables", ylab ="Adjusted RSq", type = "l")
+which.max(reg.summary$adjr2)
+#11
+points(11, reg.summary$adjr2[11], col = "red", cex = 2, pch = 20)
+```
+
+in a similar fashion we can plot C_p and BIC statistics, and indicate the models with the smallest statistic using which.min()
+
+```{r}
+plot(reg.summary$cp, xlab= "no of variables", ylab = "Cp", type = "l")
+which.min(reg.summary$cp)
+#10
+points(10, reg.summary$cp[10], col = "red", cwx = 2, pch = 20)
+which.min(reg.summary$bic)
+#6
+plot(reg.summary$bic, xlab = "no of variables", ylab = "BIC", type = "l")
+points(6, reg.summary$bic[6], col = "red", cex = 2, pch = 20)
+```
+
+the regsubsets() function has a built-in plot() command which can be used to display the selected variables for the best model with a given number of predictors, ranked according to the BIC, C_p, adjusted R^2, or AIC. To find out more about this function, type ?plot.regsubsets
+
+```{r}
+
+plot(regfit.full, scale = "r2")
+plot(regfit.full, scale = "adjr2")
+plot(regfit.full, scale = "Cp")
+plot(regfit.full, scale = "bic")
+```
+
+the top row of each plot contains a black square for each variable selected according to the optimal model associated with that statistic. For instance, we see that several models share a BIC close to -150. However, the model with the lowest BIC is the six-variable model that contains only AtBat, Hits, Walks, CRBI, DivisionW, and PutOuts. We can use the coef() function to see the coefficient estimates associated with this model.
+```{r}
+coef(regfit.full, 6)
+```
+
+## Forward and Backward Stepwise Selection
+
+We can also use the regsubsets() function to perform forward stepwise or backward stepwise selection, using the argument `r method = "forward"` or method = "backward"
+
+```{r}
+regfit.fwd = regsubsets(Salary~., data = dat, nvmax= 19, method = "forward")
+summary(regfit.fwd)
+regfit.bwd = regsubsets(Salary~., data = dat, nvmax = 19, method = "backward")
+summary(regfit.bwd)
+```
+
+For instance, we see that using forward stepwise selection, the best one-variable mode contains only CRBI, and the best two-variable model additionally includes Hits. For this data, the best one-variable through six-variable models are each identical for best subset and forward selection. However, the best seven-variable models identified by forward stepwise selection, backward stepwise selection, and best subset selection are different.
+
+```{r}
+coef(regfit.full, 7)
+coef(regfit.fwd, 7)
+coef(regfit.bwd, 7)
+```
+
+## Choosing among models using Validation or CV
+
+
