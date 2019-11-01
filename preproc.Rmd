@@ -1,0 +1,41 @@
+---
+title: "Main1"
+author: "Yigit Ozan Berk"
+date: "11/1/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data import 
+
+```{r}
+install.packages("tm")
+install.packages("slam")
+library(slam)
+library(tm)
+
+```
+
+
+```{r}
+con <- file("./en_US.twitter.txt", "r") 
+twit = readLines(con, skipNul = T)
+close(con)
+
+```
+
+
+```{r}
+set.seed(1)
+x = rbinom(2360148, size = 1, prob = .7)
+#70% of data for training, 30% for testing
+train = twit[x]
+test = twit[!x]
+rm(twit)
+```
+
+
+

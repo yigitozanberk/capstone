@@ -61,3 +61,54 @@ This is the training data to get you started that will be the basis for most of 
 https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip
 Later in the course you may use external data sets to augment your model as you see fit.
 
+## Regular exp notes
+
+whitespace word boundaries
+
+sets of literals
+
+beginnig and end of a line
+
+alternatives (word1 or word2)
+
+- Start of a line
+"^i think"
+
+- end of the line
+"morning$"
+
+- sets of characters
+"[Bb][Uu][Ss][Hh]"
+all case alternatives for the word in e.g. BUSH, BuSH, Bush, bush, bUSH
+
+- all letters from a to z (uppercase or lower case)or numbers from 0 to 9, in the beginning of a line
+"^[0-9][a-zA-Z]"
+
+- when you use ^ at the beginning of a character class, it is a metacharacter indicating logical NOT operator.
+"[^?.]$"  means = any lines NOT ending with a question mark or a period.
+
+- "any" metacharacter
+"9.11" means= 9 followed by any character followed by 11
+
+- "or" metacharacter
+"flood|fire|coldfire" will match flood or fire or coldfire
+
+- you can combine
+"^[Gg]ood|[Bb]ad" will match Good/good in the beginning of a line or Bad/bad anywhere
+
+"^([Gg]ood|[Bb]ad)" will match Good/good or Bad/bad in the beginning of a line
+
+- "optional" metacharacter
+"[Gg]eorge( [Ww]\.)? [Bb]ush" will match where whitespace + [Ww] + . is optional
+
+- backslash escapes metacharacter so . means any character, \. means period 
+
+- repetitions
+"*" means repeat any number of times, including none
+"+" means at least one
+
+"(.*)" will match any character of any number
+
+
+
+
