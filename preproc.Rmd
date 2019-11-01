@@ -19,12 +19,14 @@ library(tm)
 
 ```
 
-
+## twitter files
 ```{r}
 con <- file("./en_US.twitter.txt", "r") 
 twit = readLines(con, skipNul = T)
 close(con)
-
+y = NULL
+for(i in 1:length(twit)) {y[i] = nchar(twit[[i]])}
+summary(y)
 ```
 
 
@@ -37,5 +39,22 @@ test = twit[!x]
 rm(twit)
 ```
 
+## blogs
+
+```{r}
+con <- file("./en_US.blogs.txt", "r") 
+blogs = readLines(con, skipNul = T)
+close(con)
+
+y = NULL
+for(i in 1:length(blogs)) {y[i] = nchar(blogs[[i]])}
+summary(y)
+
+set.seed(123)
+x = rbinom(899288, size = 1, prob = .7)
+#70% of data for training, 30% for testing
+train = blog[x]
+test = blog[!x]
+```
 
 

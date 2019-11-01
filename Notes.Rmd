@@ -109,6 +109,27 @@ all case alternatives for the word in e.g. BUSH, BuSH, Bush, bush, bUSH
 
 "(.*)" will match any character of any number
 
+"[0-9]+ (.*)[0-9]+" will match, at least one number, followed by whitespace and any number of characters and at least one number again.
+
+- you can quantify the number of repetitions (min and max) you want with the curly brackets{}
+
+"[Bb]ush( +[^ ]+ +){1,5} debate" will match at least one space, followed by something that's not a space, followed by at least one space, and we want to see that between one and five times = we want to see something like space word space.
+
+{m,n} means at least m but not more than n matches
+{m} means exactly m matches
+{m,} means at least m matches
+
+- in most implementations of regular expressions, the parentheses not only limit the scope of alternatives divided by a "|", but also can be used to "remember" text matched by the subexpression enclosed
+we refer to the matched text with \1, \2, etc..
+
+" +([a-zA-Z]+) +\1 +" will match a space, followed by (at least one characters) followed by at least one space, followed by exactly the same match as before.
+ex: "............. so so ......."
+
+- * is greedy. it takes the longest possible string. you can use the ? to turn the greediness off.
+
+
+
+
 
 
 
