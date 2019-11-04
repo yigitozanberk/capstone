@@ -9,6 +9,32 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+##orig.wd <- getwd()
+##setwd("../final/en_US")
+numwords <- system("wc -w *.txt", intern=TRUE)  # intern=TRUE to return output  
+numlines <- system("wc -l *.txt", intern=TRUE)
+numbytes <- system("wc -c *.txt", intern=TRUE)
+# longest <- system("wc -L *.txt", intern=TRUE) # not working
+##setwd(orig.wd)  # return to original working dir, ie. the parent of /final
+
+# number of words for each dataset
+blog.numwords <- as.numeric(gsub('[^0-9]', '', numwords[1]))
+news.numwords <- as.numeric(gsub('[^0-9]', '', numwords[2]))
+twit.numwords <- as.numeric(gsub('[^0-9]', '', numwords[3]))
+
+# number of lines for each dataset
+blog.numlines <- as.numeric(gsub('[^0-9]', '', numlines[1]))
+news.numlines <- as.numeric(gsub('[^0-9]', '', numlines[2]))
+twit.numlines <- as.numeric(gsub('[^0-9]', '', numlines[3]))
+
+# number of bytes for each dataset
+blog.numbytes <- as.numeric(gsub('[^0-9]', '', numbytes[1]))
+news.numbytes <- as.numeric(gsub('[^0-9]', '', numbytes[2]))
+twit.numbytes <- as.numeric(gsub('[^0-9]', '', numbytes[3]))
+```
+
+
 # Data import 
 
 ```{r}
@@ -66,10 +92,11 @@ news = readLines(con, skipNul = T)
 close(con)
 
 set.seed(12345)
-x = rbinom(1010242, size = 1, prob = .7)
-#70% of data for training, 30% for testing
-train = blog[x]
-test = blog[!x]
+x = sample(1010242, 300000, replace = F)
+#30% of data for training, 70% for testing
+#due to hardware issues
+train = news[x]
+test = news[!x]
 ```
 
 ## Loading the data 
@@ -82,43 +109,30 @@ The tm package use the Corpus() function to create a corpus.
 ```{r}
 #Load data as corpus
 #VectorSource() creates character vectors
-myN <- Corpus(VectorSource(news))
+myN <- Corpus(VectorSource(train))
 ```
 
 # Cleaning
 
 1. converting everything to lower case
-
-```{r}
-myN = tm_map(myN, content_transformer(tolower))
-```
-
 2. remove punctuation
-
-```{r}
-myN = tm_map(myN, content_transformer(removePunctuation))
-```
-
 3.remove extra whitespace
-
-```{r}
-myN = tm_map(myN, content_transformer(stripWhitespace))
-```
-
 4. remove stopwords
-
-```{r}
-myN = tm_map(myN, removeWords, stopwords("english"))
-```
-
 5. remove numbers
-
-```{r}
-myN = tm_map(myN, removeNumbers)
-```
-
 remove whitespace again due to spaces of numbers
+
 ```{r}
+#1
+myN = tm_map(myN, content_transformer(tolower))
+#2
+myN = tm_map(myN, content_transformer(removePunctuation))
+#3
+myN = tm_map(myN, content_transformer(stripWhitespace))
+#4
+myN = tm_map(myN, removeWords, stopwords("english"))
+#5
+myN = tm_map(myN, removeNumbers)
+#6
 myN = tm_map(myN, content_transformer(stripWhitespace))
 ```
 
@@ -164,5 +178,20 @@ myN = tm_map(myN, stemDocument)
 ```{r}
 #create a term matrix and store it as dtm
 newsTDM <- TermDocumentMatrix(myN)
+```
+
+## high freq words
+
+```{r}
+newsTDMHighFreq = findFreqTerms(newsTDM, lowfreq = 10000, highfreq = Inf)
+inspect(newsTDM[newsTDMHighFreq, 1:10 ])
+newsTDMHighFreq
+```
+
+```{r}
+news.freq <- row_sums(newsTDM, na.rm=TRUE)
+library(ggplot2)
+#top 10 words -- counts
+qplot(y = news.freq[order(news.freq, decreasing = T)][1:10], x = names(x = news.freq[order(news.freq, decreasing = T)][1:10]), ylab= "Frequency", xlab = "Word", main = "The top 10 words -- counts")
 ```
 
