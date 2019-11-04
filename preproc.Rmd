@@ -58,3 +58,111 @@ test = blog[!x]
 ```
 
 
+## news
+
+```{r}
+con <- file("./en_US.news.txt", "r") 
+news = readLines(con, skipNul = T)
+close(con)
+
+set.seed(12345)
+x = rbinom(1010242, size = 1, prob = .7)
+#70% of data for training, 30% for testing
+train = blog[x]
+test = blog[!x]
+```
+
+## Loading the data 
+
+Loading Data
+Text to be mined can be loaded into R from different source formats.It can come from text files(.txt),pdfs (.pdf),csv files(.csv) e.t.c ,but no matter the source format ,to be used in the tm package it is turned into a “corpus”.
+A corpus is defined as “a collection of written texts, especially the entire works of a particular author or a body of writing on a particular subject”.
+The tm package use the Corpus() function to create a corpus.
+
+```{r}
+#Load data as corpus
+#VectorSource() creates character vectors
+myN <- Corpus(VectorSource(news))
+```
+
+# Cleaning
+
+1. converting everything to lower case
+
+```{r}
+myN = tm_map(myN, content_transformer(tolower))
+```
+
+2. remove punctuation
+
+```{r}
+myN = tm_map(myN, content_transformer(removePunctuation))
+```
+
+3.remove extra whitespace
+
+```{r}
+myN = tm_map(myN, content_transformer(stripWhitespace))
+```
+
+4. remove stopwords
+
+```{r}
+myN = tm_map(myN, removeWords, stopwords("english"))
+```
+
+5. remove numbers
+
+```{r}
+myN = tm_map(myN, removeNumbers)
+```
+
+remove whitespace again due to spaces of numbers
+```{r}
+myN = tm_map(myN, content_transformer(stripWhitespace))
+```
+
+
+
+```{r}
+# convert to lower case
+mydata <- tm_map(mydata, content_transformer(tolower))
+#remove ������ what would be emojis
+mydata<-tm_map(mydata, content_transformer(gsub), pattern="\\W",replace=" ")
+# remove URLs
+removeURL <- function(x) gsub("http[^[:space:]]*", "", x)
+mydata <- tm_map(mydata, content_transformer(removeURL)
+)
+# remove anything other than English letters or space
+removeNumPunct <- function(x) gsub("[^[:alpha:][:space:]]*", "", x)
+mydata <- tm_map(mydata, content_transformer(removeNumPunct))
+# remove stopwords
+mydata <- tm_map(mydata, removeWords, stopwords("english"))
+#u can create custom stop words using the code below.
+#myStopwords <- c(setdiff(stopwords('english'), c("r", "big")),"use", "see", "used", "via", "amp")
+#mydata <- tm_map(mydata, removeWords, myStopwords)
+# remove extra whitespace
+mydata <- tm_map(mydata, stripWhitespace)
+# Remove numbers
+mydata <- tm_map(mydata, removeNumbers)
+# Remove punctuations
+mydata <- tm_map(mydata, removePunctuation)
+```
+
+
+
+## Stemming
+
+```{r}
+install.packages("SnowballC")
+library(SnowballC)
+myN = tm_map(myN, stemDocument)
+```
+
+# Term-Document Matrix
+
+```{r}
+#create a term matrix and store it as dtm
+newsTDM <- TermDocumentMatrix(myN)
+```
+
