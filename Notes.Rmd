@@ -130,6 +130,54 @@ ex: "............. so so ......."
 
 
 
+packages to use
+
+quanteda
+readtext
+spacyr
+
+```{r}
+install.packages("quanteda")
+install.packages("readtext")
+install.packages("spacyr")
+
+```
+
+# Loading in files using the readtext package
+```{r}
+require(readtext)
+
+# Twitter json
+dat_json <- readtext("~/Dropbox/QUANTESS/social media/zombies/tweets.json")
+corp_twitter <- corpus(dat_json)
+summary(corp_twitter, 5)
+# generic json - needs a textfield specifier
+dat_sotu <- readtext("~/Dropbox/QUANTESS/Manuscripts/collocations/Corpora/sotu/sotu.json",
+                  textfield = "text")
+summary(corpus(dat_sotu), 5)
+# text file
+dat_txtone <- readtext("~/Dropbox/QUANTESS/corpora/project_gutenberg/pg2701.txt", cache = FALSE)
+summary(corpus(dat_txtone), 5)
+# multiple text files
+dat_txtmultiple1 <- readtext("~/Dropbox/QUANTESS/corpora/inaugural/*.txt", cache = FALSE)
+summary(corpus(dat_txtmultiple1), 5)
+# multiple text files with docvars from filenames
+dat_txtmultiple2 <- readtext("~/Dropbox/QUANTESS/corpora/inaugural/*.txt",
+                             docvarsfrom = "filenames", sep = "-",
+                             docvarnames = c("Year", "President"))
+summary(corpus(dat_txtmultiple2), 5)
+# XML data
+dat_xml <- readtext("~/Dropbox/QUANTESS/quanteda_working_files/xmlData/plant_catalog.xml",
+                  textfield = "COMMON")
+summary(corpus(dat_xml), 5)
+# csv file
+write.csv(data.frame(inaug_speech = texts(data_corpus_inaugural),
+                     docvars(data_corpus_inaugural)),
+          file = "/tmp/inaug_texts.csv", row.names = FALSE)
+dat_csv <- readtext("/tmp/inaug_texts.csv", textfield = "inaug_speech")
+summary(corpus(dat_csv), 5)
+```
+
 
 
 

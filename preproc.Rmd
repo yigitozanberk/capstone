@@ -92,11 +92,12 @@ news = readLines(con, skipNul = T)
 close(con)
 
 set.seed(12345)
-x = sample(1010242, 300000, replace = F)
-#30% of data for training, 70% for testing
+x = sample(1010242, 50000, replace = F)
+#5% of data for training, 70% for testing
 #due to hardware issues
 train = news[x]
 test = news[!x]
+rm(con, news)
 ```
 
 ## Loading the data 
@@ -183,7 +184,7 @@ newsTDM <- TermDocumentMatrix(myN)
 ## high freq words
 
 ```{r}
-newsTDMHighFreq = findFreqTerms(newsTDM, lowfreq = 10000, highfreq = Inf)
+newsTDMHighFreq = findFreqTerms(newsTDM, lowfreq = 2500, highfreq = Inf)
 inspect(newsTDM[newsTDMHighFreq, 1:10 ])
 newsTDMHighFreq
 ```
@@ -192,6 +193,40 @@ newsTDMHighFreq
 news.freq <- row_sums(newsTDM, na.rm=TRUE)
 library(ggplot2)
 #top 10 words -- counts
-qplot(y = news.freq[order(news.freq, decreasing = T)][1:10], x = names(x = news.freq[order(news.freq, decreasing = T)][1:10]), ylab= "Frequency", xlab = "Word", main = "The top 10 words -- counts")
+qplot(y = news.freq[order(news.freq, decreasing = T)][1:50], x = names(x = news.freq[order(news.freq, decreasing = T)][1:50]), ylab= "Frequency", xlab = "Word", main = "The top 50 words -- counts")
 ```
 
+```{r}
+news.freq[order(news.freq, decreasing = T)][1:50]
+summary(news.freq)
+```
+
+```{r}
+quantile4 = findFreqTerms(newsTDM, lowfreq = 5, highfreq = Inf)
+names50 = names(news.freq[order(news.freq, decreasing = T)][1:50])
+tdm = newsTDM[names50,]
+tdm2 = newsTDM[quantile4, ]
+tdm2.freq = row_sums(tdm2, na.rm = T)
+tdm2.freq.ord = tdm2.freq[order(tdm2.freq, decreasing = T)]
+summary(tdm2.freq)
+
+```
+
+```{r}
+plot(tdm2.freq.ord[1:1000])
+```
+```{r}
+tdm2.freq.log = log(tdm2.freq.ord)
+plot(tdm2.freq.log)
+```
+
+```{r}
+findAssocs(tdm2, "team", 0.05)
+```
+```{r}
+findAssocs(tdm2, "season", 0.05)
+```
+
+Maybe I can use the 50 most used words to create <50 classes by checking the word associations with findAssocs() function. Then, If the word is found in one of the class set of words, that class weights will be used in the prediction algorithm.
+
+*quanteda package*

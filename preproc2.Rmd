@@ -1,0 +1,67 @@
+---
+title: "PreProc2"
+author: "Yigit Ozan Berk"
+date: "11/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# init
+
+```{r, init}
+library(quanteda)
+library(readtext)
+library(spacyr)
+```
+
+
+```{r, numwords}
+
+##orig.wd <- getwd()
+##setwd("../final/en_US")
+numwords <- system("wc -w *.txt", intern=TRUE)  # intern=TRUE to return output  
+numlines <- system("wc -l *.txt", intern=TRUE)
+numbytes <- system("wc -c *.txt", intern=TRUE)
+# longest <- system("wc -L *.txt", intern=TRUE) # not working
+##setwd(orig.wd)  # return to original working dir, ie. the parent of /final
+
+# number of words for each dataset
+blog.numwords <- as.numeric(gsub('[^0-9]', '', numwords[1]))
+news.numwords <- as.numeric(gsub('[^0-9]', '', numwords[2]))
+twit.numwords <- as.numeric(gsub('[^0-9]', '', numwords[3]))
+
+# number of lines for each dataset
+blog.numlines <- as.numeric(gsub('[^0-9]', '', numlines[1]))
+news.numlines <- as.numeric(gsub('[^0-9]', '', numlines[2]))
+twit.numlines <- as.numeric(gsub('[^0-9]', '', numlines[3]))
+
+# number of bytes for each dataset
+blog.numbytes <- as.numeric(gsub('[^0-9]', '', numbytes[1]))
+news.numbytes <- as.numeric(gsub('[^0-9]', '', numbytes[2]))
+twit.numbytes <- as.numeric(gsub('[^0-9]', '', numbytes[3]))
+```
+
+# data import
+```{r}
+dat.twit <- readtext("./en_US.twitter.txt", cache = FALSE)
+# summary(corpus(dat.twit), 5)
+# or 
+
+con <- file("./en_US.twitter.txt", "r") 
+twit = readLines(con, skipNul = T)
+close(con)
+
+#takin 15% of data for memory reasons
+set.seed(12345)
+x = sample(2360148, 350000, replace = F)
+
+train = twit[x]
+
+myN <- corpus(train)
+rm(con, train, twit, x)
+summary(myN, 5)
+```
+
