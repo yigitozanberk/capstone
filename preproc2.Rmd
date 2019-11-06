@@ -11,10 +11,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # init
 
-```{r, init}
+```{r, init, eval=FALSE}
 library(quanteda)
 library(readtext)
 library(spacyr)
+library(ggplot2)
+library(wordcloud)
 ```
 
 
@@ -45,7 +47,7 @@ twit.numbytes <- as.numeric(gsub('[^0-9]', '', numbytes[3]))
 ```
 
 # data import
-```{r}
+```{r, dataimport, cache = TRUE}
 dat.twit <- readtext("./en_US.twitter.txt", cache = FALSE)
 # summary(corpus(dat.twit), 5)
 # or 
@@ -63,5 +65,104 @@ train = twit[x]
 myN <- corpus(train)
 rm(con, train, twit, x)
 summary(myN, 5)
+```
+
+
+```{r}
+texts(myN)[2]
+texts(myN)[4]
+texts(myN)[100]
+texts(myN)[1000]
+```
+
+## Data-Feature Matrix
+
+```{r}
+unigram = tokens(myN, remove_numbers = T, remove_punct = T)
+ngramTable
+```
+
+```{r}
+ngram1 <- tokens(myN[1],n=1)
+ngramTable <- as.data.frame(table(ngram1))
+# count the number of distinct 1-grams, matching Types for BNP text
+nrow(ngramTable)
+#1125
+# count total number of 1-grams (i.e. sum the frequencies), matching Tokens
+sum(ngramTable$Freq)
+#3280
+# print most frequent 1-grams
+tail(ngramTable[order(ngramTable$Freq),])
+```
+
+data feature matrix
+
+dat.dfm <- dfm(dat, ngrams=ng, toLower = FALSE, removePunct = FALSE, what = "fasterword", verbose = FALSE)
+```{r}
+dfm.twit = dfm(myN, remove_numbers = T, remove_punct = T)
+```
+
+
+top frequent words
+
+```{r}
+topfeatures(dfm.twit, 20)
+#dfm without stopwords
+dfm.twit = dfm(myN, remove_numbers = T, remove_punct = T,
+               remove = stopwords("english"))
+top20 = topfeatures(dfm.twit, 20)
+topfeatures(dfm.twit, 20)
+```
+
+```{r}
+top100 = topfeatures(dfm.twit, 100)
+topfeatures(dfm.twit, 100)
+```
+
+creating a wordcloud
+```{r}
+library(wordcloud)
+set.seed(100)
+textplot_wordcloud(dfm.twit, min_count = 3000, random_order = FALSE,
+                   rotation = .25,
+                   color = RColorBrewer::brewer.pal(8, "Dark2"))
+```
+
+```{r}
+qplot(y = top20, x = names(top20))
+```
+
+
+bigrams
+```{r}
+twit.bigram <- tokens(myN[1],n=2, remove_numbers = T, remove_punc = T)
+twit.bigram
+```
+
+```{r}
+dfm.twit.bigram <- dfm(myN, ngrams=2, remove_punct = T, remove_numbers = T, concatenator = " ", remove = stopwords("english"), verbose = T)
+dfm.twit.bigram[1:5, 1:5]
+```
+
+
+
+docfreq function
+
+(weighted) document frequency of a feature.
+
+```{r}
+freqs.twit = docfreq(dfm.twit.bigram)
+topfeatures(dfm.twit.bigram, 50)
+```
+
+trigrams
+
+```{r}
+dfm.twit.trigram <- dfm(myN, ngrams=3, remove_punct = T, remove_numbers = T)
+dfm.twit.trigram[1:5, 1:5]
+```
+
+```{r}
+topfeatures(dfm.twit.trigram, 50)
 ```
 

@@ -140,7 +140,7 @@ spacyr
 install.packages("quanteda")
 install.packages("readtext")
 install.packages("spacyr")
-
+install.packages("wordcloud")
 ```
 
 # Loading in files using the readtext package
