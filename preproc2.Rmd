@@ -17,6 +17,7 @@ library(readtext)
 library(spacyr)
 library(ggplot2)
 library(wordcloud)
+library(data.table)
 ```
 
 
@@ -140,7 +141,7 @@ twit.bigram
 ```
 
 ```{r}
-dfm.twit.bigram <- dfm(myN, ngrams=2, remove_punct = T, remove_numbers = T, concatenator = " ", remove = stopwords("english"), verbose = T)
+dfm.twit.bigram <- dfm(myN, ngrams=2, remove_punct = T, remove_numbers = T, remove = stopwords("english"), verbose = T)
 dfm.twit.bigram[1:5, 1:5]
 ```
 

@@ -1,0 +1,229 @@
+---
+title: "SwiftKey Capstone Proj. Milestone Report"
+author: "Yigit Ozan Berk"
+date: "11/9/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Executive Summary
+
+This is the first report for a data science project that involves word prediction using NLP. The ultimate goal for the project is to write an efficient algorithm that uses n-grams(script summaries used to tokenize the given script) to predict the next word that will appear after a given phrase.
+
+In this report, I explore 3 text files - one from blogs, news, and twitter. 
+
+After background research, I have decided to use quanteda and data.table for my main calculations for better performance. 
+
+For initial visualisation, wordcloud package seemed most impressive.
+
+
+
+# Initiation
+```{r init}
+library(quanteda)
+library(spacyr)
+library(ggplot2)
+library(wordcloud)
+library(data.table)
+library(plotly)
+
+# Below functions are used to tokenize the given script by the 'n-gram' value, 
+# and return the frequency of each ngram
+# what = "fasterword" or what = "fastestword" is not used due to incomplete cleaning measures
+getFreqs = function(dat, ng) {
+        dat.dfm = dfm(dat, ngrams = ng, remove_punct = T, remove_numbers = T,
+                      remove = stopwords("english"))
+        dat.freq = docfreq(dat.dfm)
+        dat.freq = dat.freq[sort(names(dat.freq))] 
+        return(dat.freq)
+}
+
+getTables = function(dat, ng) {
+        ngrams = getFreqs(dat = dat, ng = ng)
+        ngrams_dt = data.table(ngram = names(ngrams), freq = ngrams)
+        return(ngrams_dt)
+}
+```
+
+# Downloading Data
+
+The dataset can be downloaded from a link given in the course website. [https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip]  
+
+The unzipped file contains a directory called final, then a subdirectory called en_US, which contains the texts.
+
+There are 3 text files.
+* en_US.blogs.txt - text from blog posts
+* en_US.news.txt - text from news articles
+* en_US.twitter.txt - tweets on Twitter
+
+# Introduction
+
+The goal here to display the initial data exploration, and show I am on the track to extablishing my algorithm. 
+
+```{r exp}
+numwords <- system("wc -w *.txt", intern=TRUE)  # intern=TRUE to return output  
+numlines <- system("wc -l *.txt", intern=TRUE)
+numbytes <- system("wc -c *.txt", intern=TRUE)
+
+# number of words for each dataset
+blog.numwords <- as.numeric(gsub('[^0-9]', '', numwords[1]))
+news.numwords <- as.numeric(gsub('[^0-9]', '', numwords[2]))
+twit.numwords <- as.numeric(gsub('[^0-9]', '', numwords[3]))
+
+# number of lines for each dataset
+blog.numlines <- as.numeric(gsub('[^0-9]', '', numlines[1]))
+news.numlines <- as.numeric(gsub('[^0-9]', '', numlines[2]))
+twit.numlines <- as.numeric(gsub('[^0-9]', '', numlines[3]))
+
+# number of bytes for each dataset
+blog.numbytes <- as.numeric(gsub('[^0-9]', '', numbytes[1]))
+news.numbytes <- as.numeric(gsub('[^0-9]', '', numbytes[2]))
+twit.numbytes <- as.numeric(gsub('[^0-9]', '', numbytes[3]))
+
+words = rbind(blog.numwords, news.numwords, twit.numwords)
+lines = rbind(blog.numlines, news.numlines, twit.numlines)
+bytes = rbind(blog.numbytes, news.numbytes, twit.numbytes)
+
+#summary
+data.frame(words = words, lines= lines, Mb = bytes/1000000, 
+           row.names = c("blog", "news", "twit"))
+```
+
+For memory storage limitations, only %15 random entries from each dataset is used for calculations.
+
+Twitter text
+```{r}
+con <- file("./en_US.twitter.txt", "r") 
+twit = readLines(con, skipNul = T)
+close(con)
+
+#takin 15% of data for memory reasons
+set.seed(1)
+x = sample(2360148, 350000, replace = F)
+
+train = twit[x]
+
+TW <- corpus(train)
+rm(con, train, twit, x)
+summary(TW, 5)
+```
+
+Blog text
+```{r}
+con <- file("./en_US.blogs.txt", "r") 
+blog = readLines(con, skipNul = T)
+close(con)
+
+#takin 15% of data for memory reasons
+set.seed(12345)
+x = sample(899288, 135000, replace = F)
+
+train = blog[x]
+
+BG <- corpus(train)
+rm(con, train, blog, x)
+summary(BG, 5)
+```
+
+News text
+
+```{r}
+
+con <- file("./en_US.news.txt", "r") 
+news = readLines(con, skipNul = T)
+close(con)
+
+#takin 15% of data for memory reasons
+set.seed(10000)
+x = sample(1010242, 150000, replace = F)
+
+train = news[x]
+
+NS <- corpus(train)
+rm(con, train, news, x)
+summary(NS, 5)
+```
+
+
+
+# Visualize Word Frequency
+
+Here for each corpus file(BG, NS, TW), we create a data-feature matrix with quanteda::dfm() function. The selected features for the function are:
+- remove_punct ; for cleaning punctuations from text
+- remove_numbers ; for cleaning numbers from text
+- remove = stopwords("english") ; for cleaning stopwords defined for english language by quanteda
+
+After creating the data-feature matrix, a wordcloud visualisation is created with the wordcloud::textplot_wordcloud() function - for the words that appear more than 3000 times in total.
+
+After wordcloud visualisation, 
+
+1.Blog text
+```{r}
+BG.uni = dfm(BG, ngrams = 1, remove_punct = T, remove_numbers = T,
+                      remove = stopwords("english"))
+set.seed(100)
+textplot_wordcloud(BG.uni, min_count = 3000, random_order = FALSE,
+                   rotation = .25,
+                   color = RColorBrewer::brewer.pal(8, "Dark2"))
+rm(BG.uni)
+```
+
+The top frequencies of the unique words as below:
+```{r}
+headBG = getTables(dat = BG, ng = 1)[order(freq, decreasing = T)][1:10,]
+plot_ly(x = headBG$ngram, y = headBG$freq)
+rm(headBG)
+```
+
+
+2.News text
+```{r}
+NS.uni = dfm(NS, ngrams = 1, remove_punct = T, remove_numbers = T,
+                      remove = stopwords("english"))
+set.seed(1)
+textplot_wordcloud(NS.uni, min_count = 3000, random_order = FALSE,
+                   rotation = .25,
+                   color = RColorBrewer::brewer.pal(8, "Dark2"))
+rm(NS.uni)
+```
+
+The top frequencies of the unique words as below:
+```{r}
+headNS = getTables(dat = NS, ng = 1)[order(freq, decreasing = T)][1:10,]
+plot_ly(x = headNS$ngram, y = headNS$freq)
+rm(headNS)
+```
+
+
+3. Twitter text
+```{r}
+TW.uni = dfm(TW, ngrams = 1, remove_punct = T, remove_numbers = T,
+                      remove = stopwords("english"))
+set.seed(12345)
+textplot_wordcloud(TW.uni, min_count = 3000, random_order = FALSE,
+                   rotation = .25,
+                   color = RColorBrewer::brewer.pal(8, "Dark2"))
+rm(TW.uni)
+```
+
+The top frequencies of the unique words as below:
+```{r}
+headTW = getTables(dat = TW, ng = 1)[order(freq, decreasing = T)][1:10,]
+plot_ly(x = headTW$ngram, y = headTW$freq)
+rm(headTW)
+```
+
+
+# Plans for the main algorithm
+
+To make the algorithm into an app, first I need to establish the proper functions to create observed/unobserved trigram/bigram probability tables for a given phrase - using Katz Back-Off algorithm. After creating these functions, I can calculate the probabilities and find the highest-prob next word prediction for a given phrase. 
+
+For performance related issues, I will only use trigrams, bigrams, and unigrams.
+
+Given a phrase, the algorithm will first check the trigram to find out most likely word. If there is no probable answer, it will check the bigram. If still no probable answer, it will finally check the unigram to predict the next word based on the most common single word in the corpus.
+
+
+
