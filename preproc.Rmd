@@ -230,3 +230,8 @@ findAssocs(tdm2, "season", 0.05)
 Maybe I can use the 50 most used words to create <50 classes by checking the word associations with findAssocs() function. Then, If the word is found in one of the class set of words, that class weights will be used in the prediction algorithm.
 
 *quanteda package*
+
+
+
+
+
