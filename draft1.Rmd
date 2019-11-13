@@ -165,7 +165,7 @@ Probs of words completing OBSERVED trigrams
 ```{r}
 gamma2 <- 0.5  # bigram discount
 gamma3 <- 0.5  # trigram discount
-bigPre <- 'is_book'
+bigPre <- 'and_tell'
 
 ## Returns a two column data.frame of observed trigrams that start with the
 ## bigram prefix (bigPre) in the first column named ngram and
@@ -174,9 +174,21 @@ bigPre <- 'is_book'
 ##
 ## bigPre -  single-element char array of the form w2_w1 which are the first 
 ##           two words of the trigram we are predicting the tail word of
-## trigrams - 2 column data.frame or data.table. The first column: ngram,
+## trigrams - 2 column data.table. The first column: ngram,
 ##            contains all the trigrams in the corpus. The second column:
 ##            freq, contains the frequency/count of each trigram.
+getODTrigs = function(bigPre, trigrams) {
+    tri.obs = data.frame(ngrams = vector(mode = 'character', length = 0),
+                          freq = vector(mode = 'integer', length = 0))
+    regex = sprintf("%s%s%s", "^", bigPre, "_")
+    indices = grep(regex, trigrams$ngram)
+    if(length(indices > 0)) {
+        tri.obs = trigrams[indices, ]
+    }
+    return(tri.obs)
+}
+
+#mikes's code
 getObsTrigs <- function(bigPre, trigrams) {
     trigs.winA <- data.frame(ngrams=vector(mode = 'character', length = 0),
                              freq=vector(mode = 'integer', length = 0))
@@ -205,6 +217,18 @@ getObsTrigs <- function(bigPre, trigrams) {
 ## bigPre -  single-element char array of the form w2_w1 which are first two
 ##           words of the trigram we are predicting the tail word of
 ## triDisc - amount to discount observed trigrams
+getODTProbs = function(obsTrigs, bigrs, bigPre, triDisc = 0.5) {
+    #return NULL if no trigrams starting with bigPre are observed
+    if(nrow(obsTrigs) <1) return(NULL)
+    #get total count of the observed trigrams
+    obsCount = filter(bigrs, ngram == bigPre)$freq
+    obsTrigProbs = mutate(obsTrigs, freq = ((freq - triDisc)/obsCount))
+    colnames(obsTrigProbs) = c("ngram", "prob")
+    
+    return(obsTrigProbs)
+}
+
+#Mike's code
 getObsTriProbs <- function(obsTrigs, bigrs, bigPre, triDisc=0.5) {
     if(nrow(obsTrigs) < 1) return(NULL)
     obsCount <- filter(bigrs, ngram==bigPre)$freq[1]
@@ -233,6 +257,12 @@ Find UNOBSERVED trigram tail words
 ## unigs - 2 column data.frame of all the unigrams in the corpus:
 ##         ngram = unigram
 ##         freq = frequency/count of each unigram
+getUODTTails = function(obsTrigs, unigs) {
+    
+}
+
+
+#mike's code
 getUnobsTrigTails <- function(obsTrigs, unigs) {
     obs_trig_tails <- str_split_fixed(obsTrigs, "_", 3)[, 3]
     unobs_trig_tails <- unigs[!(unigs$ngram %in% obs_trig_tails), ]$ngram
