@@ -29,4 +29,15 @@ getTables = function(dat, ng) {
         return(ngrams_dt)
 }
 
+# UODBOBigrs = unobs_bo_bigrs, unigs, alphaBig = alpha_big
+
+UODBigrsProbs = str_split_fixed(UODBOBigrs, "_", 2)[, 2]
+w_Aw_i_1 = unigs[!(unigs$ngram %in% UODBigrsProbs), ]
+#dataframe with counts
+UODBigrsProbs = unigs[unigs$ngram %in% w_Aw_i_1, ]
+qD = sum(UODBigrsProbs$freq)
+#probabilities
+UODBigrsProbs = data.frame(ngram = UODBOBigrs, 
+                           prob = (alphaBig * UODBigrsProbs$freq / qD))
+
 

@@ -165,7 +165,7 @@ Probs of words completing OBSERVED trigrams
 ```{r}
 gamma2 <- 0.5  # bigram discount
 gamma3 <- 0.5  # trigram discount
-bigPre <- 'and_tell'
+bigPre <- 'is_book'
 
 ## Returns a two column data.frame of observed trigrams that start with the
 ## bigram prefix (bigPre) in the first column named ngram and
@@ -238,9 +238,9 @@ getObsTriProbs <- function(obsTrigs, bigrs, bigPre, triDisc=0.5) {
     return(obsTrigProbs)
 }
 
-obs_trigs <- getObsTrigs(bigPre, trigs)  # get trigrams and counts
+obs_trigs <- getODTrigs(bigPre, trigs)  # get trigrams and counts
 # convert counts to probabilities
-qbo_obs_trigrams <- getObsTriProbs(obs_trigs, bigrs, bigPre, gamma3)
+qbo_obs_trigrams <- getODTProbs(obs_trigs, bigrs, bigPre, gamma3)
 qbo_obs_trigrams
 ```
 
@@ -258,7 +258,9 @@ Find UNOBSERVED trigram tail words
 ##         ngram = unigram
 ##         freq = frequency/count of each unigram
 getUODTTails = function(obsTrigs, unigs) {
-    
+    tails = str_split_fixed(obsTrigs, "_", 3)[, 3]
+    unobs_tails = unigs[!(unigs$ngram %in% tails), ]$ngram
+    return(unobs_tails)
 }
 
 
@@ -269,8 +271,8 @@ getUnobsTrigTails <- function(obsTrigs, unigs) {
     return(unobs_trig_tails)
 }
 
-unobs_trig_tails <- getUnobsTrigTails(obs_trigs$ngram, unigs)
-head(unobs_trig_tails, 5)
+unobs_trig_tails <- getUODTTails(obs_trigs$ngram, unigs)
+head(unobs_trig_tails, 10)
 ```
 
 Calculate discounted probability mass at bigram lvl
@@ -287,6 +289,16 @@ Calculate discounted probability mass at bigram lvl
 ##           contains all the bigrams in the corpus. The second column:
 ##           freq, contains the frequency or count of each bigram.
 ## bigDisc - amount to discount observed bigrams
+getAlphaBi = function(unigram, bigrams, bigDisc = 0.5) {
+    regex = sprintf("%s%s%s", "^", unigram$ngram[1], "_")
+    bgrs_with_unig = bigrams[grep(regex, bigrams$ngram), ]
+    if(nrow(bgrs_with_unig) < 1) return(0)
+    alphaBi = 1 - (sum(bgrs_with_unig$freq - bigDisc) / unigram$freq)
+    return(alphaBi)
+}
+#returns 0 if no observed bigrams
+
+#mike's code
 getAlphaBigram <- function(unigram, bigrams, bigDisc=0.5) {
     # get all bigrams that start with unigram
     regex <- sprintf("%s%s%s", "^", unigram$ngram[1], "_")
@@ -299,20 +311,27 @@ getAlphaBigram <- function(unigram, bigrams, bigDisc=0.5) {
 
 unig <- str_split(bigPre, "_")[[1]][2]
 unig <- unigs[unigs$ngram == unig,]
-alpha_big <- getAlphaBigram(unig, bigrs, gamma2)
+alpha_big <- getAlphaBi(unig, bigrs, gamma2)
 alpha_big
 ```
 
 Calculate backed-off probabilities q_bo for bigrams
 ```{r}
-## Returns a character vector of backed off bigrams of the form w2_w1. These 
-## are all the (w_i-1, w) bigrams where w_i-1 is the tail word of the bigram
+## Returns a character vector of backed off bigrams of the form w2_w1. 
+## These are all the (w_i-1, w) bigrams where w_i-1 is the tail word of the bigram
 ## prefix bigPre and w are the tail words of unobserved bigrams that start with
 ## w_i-1.
 ##
 ## bigPre - single-element char array of the form w2_w1 which are first two
 ##          words of the trigram we are predicting the tail word of
 ## unobsTrigTails - character vector that are tail words of unobserved trigrams
+getBOBigrs = function(bigPre, UODTrigTails) {
+    w_i_1 = str_split(bigPre, "_")[[1]][2]
+    boBigrams = paste(w_i_1, UODTrigTails, sep = "_")
+    return(boBigrams)
+}
+
+#mike's code
 getBoBigrams <- function(bigPre, unobsTrigTails) {
     w_i_minus1 <- str_split(bigPre, "_")[[1]][2]
     boBigrams <- paste(w_i_minus1, unobsTrigTails, sep = "_")
@@ -328,6 +347,13 @@ getBoBigrams <- function(bigPre, unobsTrigTails) {
 ## bigrs - 2 column data.frame or data.table. The first column: ngram,
 ##         contains all the bigrams in the corpus. The second column:
 ##         freq, contains the frequency/count of each bigram.
+getODBOBigrs = function(bigPre, UODTrigTails, bigrs) {
+    boBigrams = getBOBigrs(bigPre, UODTrigTails)
+    obs_bo_bigrs = bigrs[bigrs$ngram %in% boBigrams, ]
+    return(obs_bo_bigrs)
+}
+
+#mike's code
 getObsBoBigrams <- function(bigPre, unobsTrigTails, bigrs) {
     boBigrams <- getBoBigrams(bigPre, unobsTrigTails)
     obs_bo_bigrams <- bigrs[bigrs$ngram %in% boBigrams, ]
@@ -341,6 +367,14 @@ getObsBoBigrams <- function(bigPre, unobsTrigTails, bigrs) {
 ## unobsTrigTails - character vector that are tail words of unobserved trigrams
 ## obsBoBigram - data.frame which contains the observed bigrams in a column
 ##               named ngram
+getUODBOBigrs = function(bigPre, UODTrigTails, ODBOBigrs) {
+    boBigrs = getBOBigrs(bigPre, UODTrigTails)
+    unobs_bigrs = boBigrs[!(boBigrs %in% ODBOBigrs$ngram)]
+    return(unobs_bigrs)
+}
+
+
+#mike's code
 getUnobsBoBigrams <- function(bigPre, unobsTrigTails, obsBoBigram) {
     boBigrams <- getBoBigrams(bigPre, unobsTrigTails)
     unobs_bigs <- boBigrams[!(boBigrams %in% obsBoBigram$ngram)]
@@ -361,6 +395,16 @@ getUnobsBoBigrams <- function(bigPre, unobsTrigTails, obsBoBigram) {
 ##         ngram = unigram
 ##         freq = frequency/count of each unigram
 ## bigDisc - amount to discount observed bigrams
+getODBigrsProbs = function(ODBOBigrs, unigs, bigDisc = 0.5) {
+    first_words = str_split_fixed(ODBOBigrs$ngram, "_", 2)[ ,1]
+    first_word_freqs = unigs[unigs$ngram %in% first_words, ]
+    ODBigrsProbs = (ODBOBigrs$freq - bigDisc) / first_word_freqs$freq
+    ODBigrsProbs = data.frame(ngram = ODBOBigrs$ngram, prob = ODBigrsProbs)
+    
+    return(ODBigrsProbs)
+}
+
+#mike's code
 getObsBigProbs <- function(obsBoBigrams, unigs, bigDisc=0.5) {
     first_words <- str_split_fixed(obsBoBigrams$ngram, "_", 2)[, 1]
     first_word_freqs <- unigs[unigs$ngram %in% first_words, ]
@@ -380,11 +424,28 @@ getObsBigProbs <- function(obsBoBigrams, unigs, bigDisc=0.5) {
 ##         ngram = unigram
 ##         freq = frequency/count of each unigram
 ## alphaBig - total discounted probability mass at the bigram level
+# CHECK
+getUODBOBigrsProbs = function(UODBOBigrs, unigs, alphaBig) {
+    #unobserved bigram tails
+    UODBigrsProbs = str_split_fixed(UODBOBigrs, "_", 2)[, 2]
+    w_Aw_i_1 = unigs[!(unigs$ngram %in% UODBigrsProbs), ]
+    #dataframe with counts
+    UODBigrsProbs = unigs[unigs$ngram %in% UODBigrsProbs, ]
+    qD = sum(UODBigrsProbs$freq)
+    #probabilities
+    UODBigrsProbs = data.frame(ngram = UODBOBigrs, 
+                               prob = (alphaBig * UODBigrsProbs$freq / qD))
+    return(UODBigrsProbs)
+}
+
+
+#mike's code
 getQboUnobsBigrams <- function(unobsBoBigrams, unigs, alphaBig) {
     # get the unobserved bigram tails
     qboUnobsBigs <- str_split_fixed(unobsBoBigrams, "_", 2)[, 2]
     w_in_Aw_iminus1 <- unigs[!(unigs$ngram %in% qboUnobsBigs), ]
     # convert to data.frame with counts
+    # PROBLEM HERE, w_in_Aw_iminus1 is not used to get qboUnobsBigs
     qboUnobsBigs <- unigs[unigs$ngram %in% qboUnobsBigs, ]
     denom <- sum(qboUnobsBigs$freq)
     # converts counts to probabilities
@@ -393,6 +454,19 @@ getQboUnobsBigrams <- function(unobsBoBigrams, unigs, alphaBig) {
     
     return(qboUnobsBigs)
 }
+
+#get backed off bigrams
+bo_bigrs = getBOBigrs(bigPre, unobs_trig_tails)
+#separate observed bigrams from unobserved bigrams
+obs_bo_bigrs = getODBOBigrs(bigPre, unobs_trig_tails, bigrs)
+unobs_bo_bigrs = getUODBOBigrs(bigPre, unobs_trig_tails, obs_bo_bigrs)
+#qbo
+qbo_obs_bigrams = getODBigrsProbs(obs_bo_bigrs, unigs, gamma2)
+
+unig <- str_split(bigPre, "_")[[1]][2]
+unig <- unigs[unigs$ngram == unig,]
+#qbo redistributed
+qbo_unobs_bigrams = getUODBOBigrsProbs(unobs_bo_bigrs, unigs, alpha_big)
 
 bo_bigrams <- getBoBigrams(bigPre, unobs_trig_tails)  # get backed off bigrams
 # separate bigrams which use eqn 10 and those that use 16
