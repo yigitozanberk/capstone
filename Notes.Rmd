@@ -9,6 +9,14 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+For example, given input of "another brick in the" one would start with a 5-gram model, use the first four words as the base value, and the fifth word as the predicted value. The correct prediction is "wall". Rendered in a very simple Shiny app, it looks like this:
+
+
+If you can't find a match with the 4-gram base and a prediction, then you take the three rightmost words "brick in the" to predict the last word in a 4-gram. If that fails, you take "in the" to predict the last word in a 3-gram, and so on until you decide how to handle the situation where you can't find a valid prediction from the word "the".
+
+
+
+
 Course Title
 
 Data Science Specialization SwiftKey Capstone

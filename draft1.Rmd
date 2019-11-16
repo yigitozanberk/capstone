@@ -467,21 +467,8 @@ unig <- str_split(bigPre, "_")[[1]][2]
 unig <- unigs[unigs$ngram == unig,]
 #qbo redistributed
 qbo_unobs_bigrams = getUODBOBigrsProbs(unobs_bo_bigrs, unigs, alpha_big)
-
-bo_bigrams <- getBoBigrams(bigPre, unobs_trig_tails)  # get backed off bigrams
-# separate bigrams which use eqn 10 and those that use 16
-obs_bo_bigrams <- getObsBoBigrams(bigPre, unobs_trig_tails, bigrs)
-unobs_bo_bigrams <- getUnobsBoBigrams(bigPre, unobs_trig_tails, obs_bo_bigrams)
-# unobs_bo_bigrams = c("the_buy", "the_EOS", "the_paint", "the_sell", "the_the")
-# calc obs'd bigram prob's from eqn 10
-qbo_obs_bigrams <- getObsBigProbs(obs_bo_bigrams, unigs, gamma2) #ngram     probs
-# calc alpha_big & unobs'd bigram prob's from eqn 16             #the_house 0.3125
-unig <- str_split(bigPre, "_")[[1]][2]
-unig <- unigs[unigs$ngram == unig,]
-# distrib discounted bigram prob mass to unobs bigrams in prop to unigram ML
-qbo_unobs_bigrams <- getQboUnobsBigrams(unobs_bo_bigrams, unigs, alpha_big)
-qbo_bigrams <- rbind(qbo_obs_bigrams, qbo_unobs_bigrams)
-qbo_bigrams
+qbo_bigrams = rbind(qbo_obs_bigrams, qbo_unobs_bigrams)
+head(qbo_bigrams)
 ```
 
 
@@ -510,6 +497,14 @@ Discounted probability mass in trigram level
 ##          prior) delimited with '_'. The second column: freq, is the
 ##          frequency/count of the bigram listed in the ngram column.
 ## triDisc - amount to discount observed trigrams
+getAlphaTri = function(obsTrigs, bigram, triDisc = 0.5) {
+    if(nrow(obsTrigs) < 1) return(1)
+    alphaTri = 1 - sum((obsTrigs$freq - triDisc) / bigram$freq[1])
+    
+    return(alphaTri)
+}
+
+#mike's code
 getAlphaTrigram <- function(obsTrigs, bigram, triDisc=0.5) {
     if(nrow(obsTrigs) < 1) return(1)
     alphaTri <- 1 - sum((obsTrigs$freq - triDisc) / bigram$freq[1])
@@ -518,7 +513,7 @@ getAlphaTrigram <- function(obsTrigs, bigram, triDisc=0.5) {
 }
 
 bigram <- bigrs[bigrs$ngram %in% bigPre, ]
-alpha_trig <- getAlphaTrigram(obs_trigs, bigram, gamma3)
+alpha_trig <- getAlphaTri(obs_trigs, bigram, gamma3)
 alpha_trig
 ```
 
@@ -540,6 +535,9 @@ Calculate UNOBSERVED trigram probabilities
 ##                   probs: the probability estimate for unobserved bigrams
 ##                          qbo(w1 | w2) calc'd from equation 16.
 ## alphaTrig - total discounted probability mass at the trigram level
+getUODTrigProbs = function()
+
+#mike's code
 getUnobsTriProbs <- function(bigPre, qboObsBigrams,
                              qboUnobsBigrams, alphaTrig) {
     qboBigrams <- rbind(qboObsBigrams, qboUnobsBigrams)

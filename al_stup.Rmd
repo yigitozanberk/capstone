@@ -1,0 +1,220 @@
+---
+title: "stupid backoff"
+author: "Yigit Ozan Berk"
+date: "11/16/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(quanteda)
+library(dplyr)
+library(stringr)
+library(readtext)
+library(spacyr)
+library(ggplot2)
+library(wordcloud)
+library(data.table)
+```
+
+
+
+# Downloading Data
+
+The dataset can be downloaded from a link given in the course website. [https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip]  
+
+The unzipped file contains a directory called final, then a subdirectory called en_US, which contains the texts.
+
+There are 3 text files.
+* en_US.blogs.txt - text from blog posts
+* en_US.news.txt - text from news articles
+* en_US.twitter.txt - tweets on Twitter
+
+# Introduction
+
+The goal here to display the initial data exploration, and show I am on the track to extablishing my algorithm. 
+
+```{r}
+numwords <- system("wc -w *.txt", intern=TRUE)  # intern=TRUE to return output  
+numlines <- system("wc -l *.txt", intern=TRUE)
+numbytes <- system("wc -c *.txt", intern=TRUE)
+
+# number of words for each dataset
+blog.numwords <- as.numeric(gsub('[^0-9]', '', numwords[1]))
+news.numwords <- as.numeric(gsub('[^0-9]', '', numwords[2]))
+twit.numwords <- as.numeric(gsub('[^0-9]', '', numwords[3]))
+
+# number of lines for each dataset
+blog.numlines <- as.numeric(gsub('[^0-9]', '', numlines[1]))
+news.numlines <- as.numeric(gsub('[^0-9]', '', numlines[2]))
+twit.numlines <- as.numeric(gsub('[^0-9]', '', numlines[3]))
+
+# number of bytes for each dataset
+blog.numbytes <- as.numeric(gsub('[^0-9]', '', numbytes[1]))
+news.numbytes <- as.numeric(gsub('[^0-9]', '', numbytes[2]))
+twit.numbytes <- as.numeric(gsub('[^0-9]', '', numbytes[3]))
+
+words = rbind(blog.numwords, news.numwords, twit.numwords)
+lines = rbind(blog.numlines, news.numlines, twit.numlines)
+bytes = rbind(blog.numbytes, news.numbytes, twit.numbytes)
+
+data.frame(words = words, lines= lines, Mb = bytes/1000000, 
+           row.names = c("blog", "news", "twit"))
+```
+
+For memory storage limitations, only %15 random entries from each dataset is used for calculations.
+
+Twitter text
+```{r}
+con <- file("./en_US.twitter.txt", "r") 
+twit = readLines(con, skipNul = T)
+close(con)
+
+#takin 15% of data for memory reasons
+set.seed(1)
+x = sample(2360148, 350000, replace = F)
+
+train = twit[x]
+
+TW <- corpus(train)
+rm(con, train, twit, x)
+summary(TW, 5)
+```
+
+Blog text
+```{r}
+con <- file("./en_US.blogs.txt", "r") 
+blog = readLines(con, skipNul = T)
+close(con)
+
+#takin 15% of data for memory reasons
+set.seed(12345)
+x = sample(899288, 135000, replace = F)
+
+train = blog[x]
+
+BG <- corpus(train)
+rm(con, train, blog, x)
+summary(BG, 5)
+```
+
+News text
+
+```{r}
+# 1010242
+con <- file("./en_US.news.txt", "r") 
+news = readLines(con, skipNul = T)
+close(con)
+
+#takin 15% of data for memory reasons
+set.seed(10000)
+x = sample(1010242, 150000, replace = F)
+
+train = news[x]
+
+NS <- corpus(train)
+rm(con, train, news, x)
+summary(NS, 5)
+```
+
+
+
+# Visualize Word Frequency
+
+
+```{r}
+BG.uni = getTables(dat = BG, ng = 1)
+set.seed(100)
+textplot_wordcloud(BG.uni, min_count = 3000, random_order = FALSE,
+                   rotation = .25,
+                   color = RColorBrewer::brewer.pal(8, "Dark2"))
+```
+
+
+1. create frequency tables and n-grams
+```{r}
+getFreqs = function(dat, ng) {
+        dat.dfm = dfm(dat, ngrams = ng, remove_punct = T, remove_numbers = T,
+                      remove = stopwords("english"))
+        dat.freq = docfreq(dat.dfm)
+        dat.freq = dat.freq[sort(names(dat.freq))] 
+        return(dat.freq)
+}
+
+getTables = function(dat, ng) {
+        ngrams = getFreqs(dat = dat, ng = ng)
+        ngrams_dt = data.table(ngram = names(ngrams), freq = ngrams)
+        return(ngrams_dt)
+}
+
+```
+
+unigram, bigram, and trigrams
+
+```{r}
+unigs = getTables(BG, 1)
+bigrs = getTables(BG, 2)
+trigs = getTables(BG, 3)
+```
+
+
+# Algorithm
+
+
+Probs of words completing OBSERVED trigrams
+```{r}
+bigPre <- 'is_book'
+
+## Returns a two column data.frame of observed trigrams that start with the
+## bigram prefix (bigPre) in the first column named ngram and
+## frequencies/counts in the second column named freq. If no observed trigrams
+## that start with bigPre exist, an empty data.frame is returned.
+##
+## bigPre -  single-element char array of the form w2_w1 which are the first 
+##           two words of the trigram we are predicting the tail word of
+## trigrams - 2 column data.table. The first column: ngram,
+##            contains all the trigrams in the corpus. The second column:
+##            freq, contains the frequency/count of each trigram.
+getODTrigs = function(bigPre, trigrams) {
+    tri.obs = data.frame(ngrams = vector(mode = 'character', length = 0),
+                          freq = vector(mode = 'integer', length = 0))
+    regex = sprintf("%s%s%s", "^", bigPre, "_")
+    indices = grep(regex, trigrams$ngram)
+    if(length(indices > 0)) {
+        tri.obs = trigrams[indices, ]
+    }
+    return(tri.obs)
+}
+
+
+getODBigs = function(bigPre, bigrams) {
+       big.obs = data.frame(ngrams = vector(mode = 'character', length = 0),
+                            freq = vector(mode = 'integer', length = 0))
+       w_i_1 <- str_split(bigPre, "_")[[1]][2]
+       regex = sprintf("%s%s%s", "^", w_i_1, "_")
+       indices = grep(regex, bigrams$ngram)
+       if(length(indices > 0)) {
+               big.obs = bigrams[indices, ]
+       }
+       return(big.obs)
+}
+
+getODUnigs = function(bigPre, unigrams) {
+        
+}
+
+
+getTrigProbs = function(bigPre, trigrams, bigrams) {
+        
+}
+
+S3 = getODTrigs(bigPre, trigs) # get observed trigrams and counts
+S2 = getODBigs(bigPre, bigrs) # get observed bigrams and counts
+
+
+```
+
