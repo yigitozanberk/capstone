@@ -138,8 +138,9 @@ textplot_wordcloud(BG.uni, min_count = 3000, random_order = FALSE,
 1. create frequency tables and n-grams
 ```{r}
 getFreqs = function(dat, ng) {
-        dat.dfm = dfm(dat, ngrams = ng, remove_punct = T, remove_numbers = T,
-                      remove = stopwords("english"))
+        dat.dfm = dfm(dat, ngrams = ng, remove_punct = T, remove_numbers = T
+                      #,remove = stopwords("english")
+                      )
         dat.freq = docfreq(dat.dfm)
         dat.freq = dat.freq[sort(names(dat.freq))] 
         return(dat.freq)
@@ -156,9 +157,21 @@ getTables = function(dat, ng) {
 unigram, bigram, and trigrams
 
 ```{r}
-unigs = getTables(BG, 1)
-bigrs = getTables(BG, 2)
-trigs = getTables(BG, 3)
+BG.unigs = getTables(BG, 1)
+BG.bigrs = getTables(BG, 2)
+BG.trigs = getTables(BG, 3)
+rm(BG)
+
+NS.unigs = getTables(NS, 1)
+NS.bigrs = getTables(NS, 2)
+NS.trigs = getTables(NS, 3)
+rm(NS)
+
+TW.unigs = getTables(TW, 1)
+TW.bigrs = getTables(TW, 2)
+TW.trigs = getTables(TW, 3)
+rm(TW)
+
 ```
 
 
@@ -190,7 +203,16 @@ getODTrigs = function(bigPre, trigrams) {
     return(tri.obs)
 }
 
-
+## Returns a two column data.frame of observed bigrams that start with the
+## unigram prefix (second word of bigPre) in the first column named ngram and
+## frequencies/counts in the second column named freq. If no observed bigrams
+## that start with second word of bigPre exist, an empty data.frame is returned.
+##
+## bigPre -  single-element char array of the form w2_w1 which are the first 
+##           two words of the trigram we are predicting the tail word of
+## trigrams - 2 column data.table. The first column: ngram,
+##            contains all the trigrams in the corpus. The second column:
+##            freq, contains the frequency/count of each trigram.
 getODBigs = function(bigPre, bigrams) {
        big.obs = data.frame(ngrams = vector(mode = 'character', length = 0),
                             freq = vector(mode = 'integer', length = 0))
@@ -203,18 +225,50 @@ getODBigs = function(bigPre, bigrams) {
        return(big.obs)
 }
 
-getODUnigs = function(bigPre, unigrams) {
+
+#x = getTrigProbs(bigPre, trigs, bigrs, unigs)
+
+getTrigProbs = function(bigPre, trigrams, bigrams, unigrams) {
+        obs_trigs = getODTrigs(bigPre, trigrams)
+        regex = sprintf("%s%s%s", "^", bigPre, "$")
+        bigr_count = bigrams[grep(regex, bigrams$ngram), ]$freq
+
+        if(nrow(obs_trigs) < 1) {
+                bigr_probs = getBigProbs(bigPre, bigrams, unigrams)
+                probs = data.frame(ngram = bigr_probs$ngram, 
+                                   prob = bigr_probs$prob * 0.4)
+                return(probs)
+        } else {
+                probs = obs_trigs %>% rename( prob = freq) %>%
+                    mutate(prob = prob / bigr_count) %>% 
+                    arrange(desc(prob), ngram)
+                return(probs)
+        }
         
 }
 
-
-getTrigProbs = function(bigPre, trigrams, bigrams) {
-        
+getBigProbs = function(bigPre, bigrams, unigrams) {
+    obs_bigs = getODBigs(bigPre, bigrams)
+    w_i_1 <- str_split(bigPre, "_")[[1]][2]
+    regex = sprintf("%s%s%s", "^", w_i_1, "$")
+    unig_count = unigrams[grep(regex, unigrams$ngram), ]$freq
+    if(nrow(obs_bigs) < 1) {
+        probs = getUnigProbs(unigrams) %>% mutate(prob = prob * 0.4)
+        return(probs)
+    } else {
+        probs = obs_bigs %>% rename(prob = freq) %>%
+            mutate(prob = prob/unig_count) %>%
+            arrange(desc(prob), ngram)
+        return(probs)
+    }
 }
 
-S3 = getODTrigs(bigPre, trigs) # get observed trigrams and counts
-S2 = getODBigs(bigPre, bigrs) # get observed bigrams and counts
-
+getUnigProbs = function(unigrams) {
+    probs = unigrams %>% rename(prob = freq) %>%
+        mutate(prob = prob/sum(prob)) %>%
+        arrange(desc(prob), ngram)
+    return(probs)
+}
 
 ```
 
