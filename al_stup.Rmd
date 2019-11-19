@@ -137,19 +137,12 @@ textplot_wordcloud(BG.uni, min_count = 3000, random_order = FALSE,
 
 1. create frequency tables and n-grams
 ```{r}
-getFreqs = function(dat, ng) {
-        dat.dfm = dfm(dat, ngrams = ng, remove_punct = T, remove_numbers = T
-                      #,remove = stopwords("english")
-                      )
-        dat.freq = docfreq(dat.dfm)
-        dat.freq = dat.freq[sort(names(dat.freq))] 
-        return(dat.freq)
-}
-
 getTables = function(dat, ng) {
-        ngrams = getFreqs(dat = dat, ng = ng)
-        ngrams_dt = data.table(ngram = names(ngrams), freq = ngrams)
-        return(ngrams_dt)
+    dat.dfm = dfm(dat, ngrams = ng, remove_punct = T, remove_numbers = T)
+    dat.tbl = data.table(ngram = featnames(dat.dfm), count = colSums(dat.dfm),
+                         key = "ngram")
+    dat.tbl = dat.tbl[order(ngram)]
+    return(dat.tbl)
 }
 
 ```
