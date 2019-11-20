@@ -76,3 +76,86 @@ profanity_filter <- function(tv) {
 }
 
 
+
+
+
+
+## DRAFT 1 ---------------------------------------------------------------
+
+library(data.table)
+library(quanteda)
+library(dplyr)
+library(stringr)
+
+getTables = function(dat, ng) {
+        dat.dfm = dfm(dat, ngrams = ng, remove_punct = T, remove_numbers = T)
+        dat.tbl = data.table(ngram = featnames(dat.dfm), freq = colSums(dat.dfm),
+                             key = "ngram")
+        dat.tbl = dat.tbl[order(ngram)]
+        return(dat.tbl)
+}
+
+#set boundaries
+y = list (x1 = 1:350000,
+          x2 = 350001:700000,
+          x3 = 700001:1050000,
+          x4 = 1050001:1400000,
+          x5 = 1400000:1750000,
+          x6 = 1750001:2100000,
+          x7 = 2100001:2360148)
+#read all text
+con <- file("./en_US.twitter.txt", "r") 
+twit = readLines(con, skipNul = T)
+close(con)
+
+train = twit[y[[1]]]
+#transform to corpus
+TW <- corpus(train)
+rm(con, train, twit, x)
+summary(TW, 5)
+
+#merge dfms
+rbindlist(list(a, a2))[, sum(c), b]
+
+TW = corpus(twit[y[[1]]])
+
+unigs1 = getTables(TW, 1)
+bigrs1 = getTables(TW, 2)
+trigs1 = getTables(TW, 3)
+
+
+TW = corpus(twit[y[[2]]])
+
+unigs2 = getTables(TW, 1)
+bigrs2 = getTables(TW, 2)
+trigs2 = getTables(TW, 3)
+
+TW = corpus(twit[y[[3]]])
+
+unigs = rbindlist(list(unigs, unigs1))[, sum(freq), ngram]
+
+
+
+
+
+getFreqs = function(dat, ng) {
+        dat.dfm = dfm(dat, ngrams = ng, remove_punct = T, remove_numbers = T,
+                      remove = stopwords("english"))
+        dat.freq = docfreq(dat.dfm)
+        dat.freq = dat.freq[sort(names(dat.freq))] 
+        return(dat.freq)
+}
+
+getTables2 = function(dat, ng) {
+        ngrams = getFreqs(dat = dat, ng = ng)
+        ngrams_dt = data.table(ngram = names(ngrams), freq = ngrams)[order(ngram, decreasing = T)]
+        return(ngrams_dt)
+}
+
+
+
+microbenchmark(
+        getTables(TW, 1),
+        getTables2(TW, 1),
+        times = 10
+)

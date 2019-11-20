@@ -83,6 +83,14 @@ train = twit[x]
 TW <- corpus(train)
 rm(con, train, twit, x)
 summary(TW, 5)
+
+y = list (x1 = 1:350000,
+          x2 = 350001:700000,
+          x3 = 700001:1050000,
+          x4 = 1050001:1400000,
+          x5 = 1400000:1750000,
+          x6 = 1750001:2100000,
+          x7 = 2100001:2360148)
 ```
 
 Blog text
@@ -263,3 +271,5 @@ getUnigProbs = function(unigrams) {
 
 ```
 
+
+rbindlist(list(a, a2))[, sum(c), b]
