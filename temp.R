@@ -132,25 +132,42 @@ trigs2 = getTables(TW, 3)
 
 TW = corpus(twit[y[[3]]])
 
-unigs = rbindlist(list(unigs, unigs1))[, sum(freq), ngram]
+unigs3 = getTables(TW, 1)
+bigrs3 = getTables(TW, 2)
+trigs3 = getTables(TW, 3)
 
+TW = corpus(twit[y[[4]]])
 
+unigs4 = getTables(TW, 1)
+bigrs4 = getTables(TW, 2)
+trigs4 = getTables(TW, 3)
 
+TW = corpus(twit[y[[5]]])
 
+unigs5 = getTables(TW, 1)
+bigrs5 = getTables(TW, 2)
+trigs5 = getTables(TW, 3)
 
-getFreqs = function(dat, ng) {
-        dat.dfm = dfm(dat, ngrams = ng, remove_punct = T, remove_numbers = T,
-                      remove = stopwords("english"))
-        dat.freq = docfreq(dat.dfm)
-        dat.freq = dat.freq[sort(names(dat.freq))] 
-        return(dat.freq)
-}
+TW = corpus(twit[y[[6]]])
 
-getTables2 = function(dat, ng) {
-        ngrams = getFreqs(dat = dat, ng = ng)
-        ngrams_dt = data.table(ngram = names(ngrams), freq = ngrams)[order(ngram, decreasing = T)]
-        return(ngrams_dt)
-}
+unigs6 = getTables(TW, 1)
+bigrs6 = getTables(TW, 2)
+trigs6 = getTables(TW, 3)
+
+TW = corpus(twit[y[[7]]])
+
+unigs7 = getTables(TW, 1)
+bigrs7 = getTables(TW, 2)
+trigs7 = getTables(TW, 3)
+
+unigs = rbindlist(list(unigs1, unigs2, unigs3, 
+                       unigs4, unigs5, unigs6, unigs7))[, sum(freq), ngram]
+
+bigrs = rbindlist(list(bigrs1, bigrs2, bigrs3, 
+                       bigrs4, bigrs5, bigrs6, bigrs7))[, sum(freq), ngram]
+
+trigs = rbindlist(list(trigs1, trigs2, trigs3,
+                       trigs4, trigs5, trigs6, trigs7))[, sum(freq), ngram]
 
 
 
@@ -159,3 +176,27 @@ microbenchmark(
         getTables2(TW, 1),
         times = 10
 )
+
+
+
+TW = corpus(twit[y[[1]]])
+unigs1 = getTablesRM(TW, 1)
+TW = corpus(twit[y[[2]]])
+unigs2 = getTablesRM(TW, 1)
+TW = corpus(twit[y[[3]]])
+unigs3 = getTablesRM(TW, 1)
+TW = corpus(twit[y[[4]]])
+unigs4 = getTablesRM(TW, 1)
+TW = corpus(twit[y[[5]]])
+unigs5 = getTablesRM(TW, 1)
+TW = corpus(twit[y[[6]]])
+unigs6 = getTablesRM(TW, 1)
+TW = corpus(twit[y[[7]]])
+unigs7 = getTablesRM(TW, 1)
+
+unigs = rbindlist(list(unigs1, unigs2, unigs3, 
+                       unigs4, unigs5, unigs6, unigs7))[, sum(freq), ngram]
+rm(unigs1, unigs2, unigs3, unigs4, unigs5, unigs6, unigs7)
+gc()
+save(unigs, file = "unigs.rda")
+
