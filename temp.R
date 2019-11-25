@@ -76,9 +76,20 @@ profanity_filter <- function(tv) {
 }
 
 
+con <- file("./en_US.twitter.txt", "r") 
+twit = readLines(con, skipNul = T)
+close(con)
 
+#takin 15% of data for memory reasons
+set.seed(1)
+x = sample(2360148, 3500, replace = F)
 
+train = twit[x]
 
+TW <- corpus(train)
+
+bigrs = getTables(TW, 2)
+trigs = getTables(TW, 3)
 
 ## DRAFT 1 ---------------------------------------------------------------
 
@@ -86,6 +97,7 @@ library(data.table)
 library(quanteda)
 library(dplyr)
 library(stringr)
+library(sqldf)
 
 getTables = function(dat, ng) {
         dat.dfm = dfm(dat, ngrams = ng, remove_punct = T, remove_numbers = T)
