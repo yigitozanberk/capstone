@@ -8,30 +8,55 @@
 #
 
 library(shiny)
+library(quanteda)
+library(dplyr)
+library(stringr)
+library(wordcloud)
+library(data.table)
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
 
-    output$distPlot <- renderPlot({
+    ## load the ngram databases extracted from twitter corpus
+    load("unigsFull.rda")
+    load("unigs.rda")
+    load("bigrs.rda")
+    load("trigs.rda")
+    source("getAdjNgram.R")
+    source("getSQLFinalProbs.R")
+    source("getSQLTrigProbs.R")
+    source("getSQLBigProbs.R")
+    source("getUnigProbs.R")
+    source("wordSplitter.R")
+    
 
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
+    modelpred <- reactive({
+        in.words <- input$InputText
+        bigPre <- wordSplitter(in.words)
+        pred <- getSQLFinalProbs(bigPre, unigs)
+        pred.words <- getAdjNgram(pred)
+        return(pred.words)
+    })
+    
+    output$pred1 <- renderText({
+        modelpred()[1]
+    })
+    
+    
+    output$wordPlot <- renderPlot({
 
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
 
     })
     
     output$documentation <- renderUI({
-        str1 <- "Data Source: Credit Card Balance Data (accessed using R Package ISLR)"
+        str1 <- "Data Source: Coursera Capstone Project Twitter Data"
         str2 <- ""
-        str3 <- "Input 1: Select balance value"
-        str4 <- "Input 2: Select rating value"
-        str5 <- "Input 3: Select student status"
+        str3 <- "Input: Type any word(s)"
+        str4 <- ""
+        str5 <- ""
         str6 <- ""
-        str7 <- "Output: Predicted Income level of the person based on unput values"
-        str8 <- ""
+        str7 <- "Output: Top 5 predicted words"
+        str8 <- "Output: Top associated words as wordcloud image"
         str9 <- "ui.R code: https://github.com/yigitozanberk/Developing_Data_Products/blob/master/DDP_Final/ui.R"
         str10 <- ""
         str11 <- "server.R code: https://github.com/yigitozanberk/Developing_Data_Products/blob/master/DDP_Final/server.R"

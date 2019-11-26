@@ -14,11 +14,12 @@ knitr::opts_chunk$set(echo = TRUE)
 library(quanteda)
 library(dplyr)
 library(stringr)
+library(wordcloud)
+library(data.table)
 library(readtext)
 library(spacyr)
 library(ggplot2)
-library(wordcloud)
-library(data.table)
+
 ```
 
 

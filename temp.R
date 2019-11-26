@@ -90,6 +90,7 @@ TW <- corpus(train)
 
 bigrs = getTables(TW, 2)
 trigs = getTables(TW, 3)
+unigs = getTables(TW, 1)
 
 ## DRAFT 1 ---------------------------------------------------------------
 

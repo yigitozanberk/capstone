@@ -27,13 +27,14 @@ shinyUI(fluidPage(
             tabsetPanel(type = "tabs", 
                         tabPanel("Prediction", 
                                  textOutput("Associated Words"),
-                                 plotOutput("plot1"),
                                  h3("Predicted Next Word(s):"),
+                                 h3("(Please wait while the program)"),
                                  textOutput("pred1"),
                                  textOutput("pred2"),
                                  textOutput("pred3"),
                                  textOutput("pred4"),
-                                 textOutput("pred5")
+                                 textOutput("pred5"),
+                                 plotOutput("plot1"),
                         ),
                         tabPanel("Documentation",
                                  htmlOutput("documentation"))
