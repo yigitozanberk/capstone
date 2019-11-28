@@ -13,22 +13,23 @@ library(dplyr)
 library(stringr)
 library(wordcloud)
 library(data.table)
+library(sqldf)
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
 
     ## load the ngram databases extracted from twitter corpus
-    load("unigsFull.rda")
-    load("unigs.rda")
-    load("bigrs.rda")
-    load("trigs.rda")
+    #load("unigsFull.rda")
+    #load("unigs.rda")
+    #load("bigrs.rda")
+    #load("trigs.rda")
     source("getAdjNgram.R")
     source("getSQLFinalProbs.R")
     source("getSQLTrigProbs.R")
     source("getSQLBigProbs.R")
     source("getUnigProbs.R")
     source("wordSplitter.R")
-    
+    mypred <- vector(mode = "character", length = 0 )
 
     modelpred <- reactive({
         in.words <- input$InputText
@@ -39,15 +40,31 @@ shinyServer(function(input, output) {
     })
     
     output$pred1 <- renderText({
-        modelpred()[1]
+        modelpred()[1, ngram]
+    })
+    output$pred2 <- renderText({
+        modelpred()[2, ngram]
+    })
+    output$pred3 <- renderText({
+        modelpred()[3, ngram]
+    })
+    output$pred4 <- renderText({
+        modelpred()[4, ngram]
+    })
+    output$pred5 <- renderText({
+        modelpred()[5, ngram]
     })
     
+    # Make the wordcloud drawing predictable during a session
+    wordcloud_rep <- repeatable(wordcloud)
     
-    output$wordPlot <- renderPlot({
-
-
+    output$plot <- renderPlot({
+        mytab <- modelpred()
+        wordcloud_rep(mytab[, ngram], mytab[, freq], scale=c(4,0.5),
+                      min.freq = 0, max.words= 50,
+                      color = RColorBrewer::brewer.pal(8, "Dark2"))
     })
-    
+
     output$documentation <- renderUI({
         str1 <- "Data Source: Coursera Capstone Project Twitter Data"
         str2 <- ""
