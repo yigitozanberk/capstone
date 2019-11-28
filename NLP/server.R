@@ -19,10 +19,10 @@ library(sqldf)
 shinyServer(function(input, output) {
 
     ## load the ngram databases extracted from twitter corpus
-    #load("unigsFull.rda")
-    #load("unigs.rda")
-    #load("bigrs.rda")
-    #load("trigs.rda")
+    load("unigsFull.rda")
+    load("unigs.rda")
+    load("bigrs.rda")
+    load("trigs.rda")
     source("getAdjNgram.R")
     source("getSQLFinalProbs.R")
     source("getSQLTrigProbs.R")
@@ -32,11 +32,20 @@ shinyServer(function(input, output) {
     mypred <- vector(mode = "character", length = 0 )
 
     modelpred <- reactive({
-        in.words <- input$InputText
-        bigPre <- wordSplitter(in.words)
-        pred <- getSQLFinalProbs(bigPre, unigs)
-        pred.words <- getAdjNgram(pred)
-        return(pred.words)
+            withProgress({
+                setProgress(message = "Processing corpus...")
+                in.words <- input$InputText
+                bigPre <- wordSplitter(in.words)
+                pred <- getSQLFinalProbs(bigPre, unigs)
+                pred.words <- getAdjNgram(pred)
+                return(pred.words)
+            })
+        
+        #in.words <- input$InputText
+        #bigPre <- wordSplitter(in.words)
+        #pred <- getSQLFinalProbs(bigPre, unigs)
+        #pred.words <- getAdjNgram(pred)
+        #return(pred.words)
     })
     
     output$pred1 <- renderText({
