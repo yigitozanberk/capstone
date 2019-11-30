@@ -20,13 +20,21 @@ shinyServer(function(input, output) {
     load("unigs.rda")
     load("bigrs.rda")
     load("trigs.rda")
-    load("unigsFull.rda")
+    load("unigsfull.rda")
+    #unigsFull <- data.table(readRDS("./unigsfull.rds"))
+    #unigs <- data.table(readRDS("./unigs.rds"))
+    #bigrs <- data.table(readRDS("./bigrs.rds"))
+    #trigs <- data.table(readRDS("./trigs.rds"))
     source("getAdjNgram.R")
     source("getSQLFinalProbs.R")
     source("getSQLTrigProbs.R")
     source("getSQLBigProbs.R")
     source("getUnigProbs.R")
     source("wordSplitter.R")
+    trigs <- data.table(trigs)
+    bigrs <- data.table(bigrs)
+    unigs <- data.table(unigs)
+    unigsFull <- data.table(unigsfull)
     mypred <- vector(mode = "character", length = 0 )
 
     modelpred <- reactive({
@@ -34,9 +42,14 @@ shinyServer(function(input, output) {
                 setProgress(message = "Processing corpus...")
                 in.words <- input$InputText
                 bigPre <- wordSplitter(in.words)
-                pred <- getSQLFinalProbs(bigPre, unigs)
-                pred.words <- getAdjNgram(pred)
-                return(pred.words)
+                if(length(bigPre) == 0) {
+                    pred.words = getUnigProbs(unigsFull)[1:50]
+                    return(pred.words)
+                } else {
+                    pred <- getSQLFinalProbs(bigPre, unigs)
+                    pred.words <- getAdjNgram(pred)
+                    return(pred.words)
+                }
             })
         
         #in.words <- input$InputText

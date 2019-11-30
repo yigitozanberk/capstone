@@ -19,7 +19,7 @@ library(data.table)
 library(readtext)
 library(spacyr)
 library(ggplot2)
-
+library(sqldf)
 ```
 
 
@@ -77,7 +77,7 @@ close(con)
 
 #takin 15% of data for memory reasons
 set.seed(1)
-x = sample(2360148, 590037, replace = F)
+x = sample(2360148, 300000, replace = F)
 
 train = twit[x]
 
@@ -179,9 +179,9 @@ NS.trigs = getTables(NS, 3)
 rm(NS)
 
 unigs = getTables(TW, 1)
+unigsfull = getTablesRM(TW, 1)
 bigrs = getTables(TW, 2)
 trigs = getTables(TW, 3)
-quads = getTables(TW, 4)
 rm(TW)
 gc()
 ```
