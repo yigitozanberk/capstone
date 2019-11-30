@@ -8,8 +8,6 @@
 #
 
 library(shiny)
-library(quanteda)
-library(dplyr)
 library(stringr)
 library(wordcloud)
 library(data.table)
@@ -19,10 +17,10 @@ library(sqldf)
 shinyServer(function(input, output) {
 
     ## load the ngram databases extracted from twitter corpus
-    load("unigsFull.rda")
     load("unigs.rda")
     load("bigrs.rda")
     load("trigs.rda")
+    load("unigsFull.rda")
     source("getAdjNgram.R")
     source("getSQLFinalProbs.R")
     source("getSQLTrigProbs.R")

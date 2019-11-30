@@ -77,7 +77,7 @@ close(con)
 
 #takin 15% of data for memory reasons
 set.seed(1)
-x = sample(2360148, 350000, replace = F)
+x = sample(2360148, 590037, replace = F)
 
 train = twit[x]
 

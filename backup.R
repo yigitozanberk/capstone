@@ -212,3 +212,14 @@ shinyServer(function(input, output) {
         })
         
 })
+
+
+library()
+unigsFull = readRDS("unigsFull.rds")
+unigs = readRDS("unigs.rds")
+bigrs = readRDS("bigrs.rds")
+trigs = readRDS("trigs.rds")
+#source_data("https://github.com/yigitozanberk/capstone/blob/master/NLP/trigs.rda?raw=true")
+#source_data("https://github.com/yigitozanberk/capstone/blob/master/NLP/bigrs.rda?raw=true")
+#source_data("https://github.com/yigitozanberk/capstone/blob/master/NLP/unigs.rda?raw=true")
+#source_data("https://github.com/yigitozanberk/capstone/blob/master/NLP/unigsFull.rda?raw=true")
