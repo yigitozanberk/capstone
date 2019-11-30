@@ -12,6 +12,7 @@ library(stringr)
 library(wordcloud)
 library(data.table)
 library(sqldf)
+library(dplyr)
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
@@ -31,6 +32,10 @@ shinyServer(function(input, output) {
     source("getSQLBigProbs.R")
     source("getUnigProbs.R")
     source("wordSplitter.R")
+    source("getTrigProbs.R")
+    source("getBigProbs.R")
+    source("getODTrigs.R")
+    source("getODBigs.R")
     trigs <- data.table(trigs)
     bigrs <- data.table(bigrs)
     unigs <- data.table(unigs)
@@ -43,10 +48,11 @@ shinyServer(function(input, output) {
                 in.words <- input$InputText
                 bigPre <- wordSplitter(in.words)
                 if(length(bigPre) == 0) {
-                    pred.words = getUnigProbs(unigsFull)[1:50]
+                    pred.words = getUnigProbs(unigsFull)[1:50] %>%
+                        rename(prob = freq)
                     return(pred.words)
                 } else {
-                    pred <- getSQLFinalProbs(bigPre, unigs)
+                    pred <- getTrigProbs(bigPre, trigs, bigrs, unigs)
                     pred.words <- getAdjNgram(pred)
                     return(pred.words)
                 }
@@ -80,7 +86,7 @@ shinyServer(function(input, output) {
     
     output$plot <- renderPlot({
         mytab <- modelpred()
-        wordcloud_rep(mytab[, ngram], mytab[, freq], scale=c(4,0.5),
+        wordcloud_rep(mytab[, ngram], mytab[, prob], scale=c(4,0.5),
                       min.freq = 0, max.words= 50,
                       color = RColorBrewer::brewer.pal(8, "Dark2"))
     })

@@ -223,3 +223,13 @@ trigs = readRDS("trigs.rds")
 #source_data("https://github.com/yigitozanberk/capstone/blob/master/NLP/bigrs.rda?raw=true")
 #source_data("https://github.com/yigitozanberk/capstone/blob/master/NLP/unigs.rda?raw=true")
 #source_data("https://github.com/yigitozanberk/capstone/blob/master/NLP/unigsFull.rda?raw=true")
+
+
+
+
+## https://yoberk.shinyapps.io/mypred/
+        
+        
+        
+        
+        

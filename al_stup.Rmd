@@ -241,7 +241,7 @@ getTrigProbs = function(bigPre, trigrams, bigrams, unigrams) {
 
         if(nrow(obs_trigs) < 1) {
                 bigr_probs = getBigProbs(bigPre, bigrams, unigrams)
-                probs = data.frame(ngram = bigr_probs$ngram, 
+                probs = data.table(ngram = bigr_probs$ngram, 
                                    prob = bigr_probs$prob * 0.4)
                 return(probs)
         } else {

@@ -6,6 +6,7 @@
 ##            contains all the predicted trigrams, bigrams or unigrams
 ##            together with their associated probability scores
 getAdjNgram = function(my.ngram) {
+        my.ngram = data.table(my.ngram)
         samp = strsplit(my.ngram[1,ngram], split = "_")
         if(length(samp[[1]]) == 3) {
                 my.ngram$ngram = str_split_fixed(my.ngram$ngram, "_", 3)[, 3]
