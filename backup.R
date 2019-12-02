@@ -228,7 +228,7 @@ trigs = readRDS("trigs.rds")
 
 
 ## https://yoberk.shinyapps.io/mypred/
-        
+## http://rpubs.com/yoberk/nlpshinyapp
         
         
         

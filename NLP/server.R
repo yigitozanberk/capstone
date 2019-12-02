@@ -39,7 +39,7 @@ shinyServer(function(input, output) {
     trigs <- data.table(trigs)
     bigrs <- data.table(bigrs)
     unigs <- data.table(unigs)
-    unigsFull <- data.table(unigsfull)
+    unigsfull <- data.table(unigsfull)
     mypred <- vector(mode = "character", length = 0 )
 
     modelpred <- reactive({
@@ -48,7 +48,7 @@ shinyServer(function(input, output) {
                 in.words <- input$InputText
                 bigPre <- wordSplitter(in.words)
                 if(length(bigPre) == 0) {
-                    pred.words = getUnigProbs(unigsFull)[1:50] %>%
+                    pred.words = getUnigProbs(unigsfull)[1:50] %>%
                         rename(prob = freq)
                     return(pred.words)
                 } else {

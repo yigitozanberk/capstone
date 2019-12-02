@@ -238,8 +238,8 @@ getTrigProbs = function(bigPre, trigrams, bigrams, unigrams) {
         regex = sprintf("%s%s%s", "^", bigPre, "$")
         #bigr_count = bigrams[grep(regex, bigrams$ngram), ]$freq
         bigr_count = bigrams[ngram %like% regex]$freq
-
-        if(nrow(obs_trigs) < 1) {
+        count = length(strsplit(bigPre, "_")[[1]])
+        if(count < 2 | nrow(obs_trigs) < 1) {
                 bigr_probs = getBigProbs(bigPre, bigrams, unigrams)
                 probs = data.table(ngram = bigr_probs$ngram, 
                                    prob = bigr_probs$prob * 0.4)
@@ -261,7 +261,7 @@ getBigProbs = function(bigPre, bigrams, unigrams) {
     #unig_count = unigrams[grep(regex, unigrams$ngram), ]$freq
     unig_count = unigrams[ngram %like% regex]$freq
     if(nrow(obs_bigs) < 1) {
-        probs = getUnigProbs(unigrams) %>% mutate(prob = prob * 0.4)
+        probs = getUnigProbs(unigrams) %>% mutate(prob = freq * 0.4)
         return(probs)
     } else {
         probs = obs_bigs %>% rename(prob = freq) %>%
