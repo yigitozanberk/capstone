@@ -13,15 +13,16 @@ library(wordcloud)
 library(data.table)
 library(sqldf)
 library(dplyr)
+load("unigs.rda")
+load("bigrs.rda")
+load("trigs.rda")
+load("unigsfull.rda")
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
 
     ## load the ngram databases extracted from twitter corpus
-    load("unigs.rda")
-    load("bigrs.rda")
-    load("trigs.rda")
-    load("unigsfull.rda")
+
     #unigsFull <- data.table(readRDS("./unigsfull.rds"))
     #unigs <- data.table(readRDS("./unigs.rds"))
     #bigrs <- data.table(readRDS("./bigrs.rds"))

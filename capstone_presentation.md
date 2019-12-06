@@ -23,9 +23,9 @@ The Algorithm
 - The algorithm used is Stupid Back-off algorithm: the algorithm takes the input, and if the ngram is observed it is printed, if not, it outputs (n-1)gram with 0.4 probability penalty multiplier. 
 - The model was selected for simplicity and performance. The app predicts the next word in an average of 3-4 seconds. The raw data was extracted from 300,000 lines of twitter texts. The first initialization takes around 9 seconds.
 
-![app image](ShinyImage.png)
 
-Slide With Plot
+
+Further Information
 ========================================================
 
 - For further reading on performance related comparisons of Stupid backoff algorithm you can visit this link:
@@ -38,3 +38,7 @@ Slide With Plot
 <https://github.com/yigitozanberk/capstone/blob/master/NLP/ui.R>
 <https://github.com/yigitozanberk/capstone/blob/master/NLP/server.R>
 
+App Image
+========================================================
+
+![app image](ShinyImage.png)
